@@ -1,0 +1,23 @@
+--Creating a clothing store database
+
+CREATE TABLE mystore (id INTEGER PRIMARY KEY, itemname TEXT, buyprice INTEGER, sellingprice INTEGER, numberofitem INTEGER);
+
+INSERT INTO mystore VALUES (1, "Short Sleeve Shirt", 3, 10, 20);
+INSERT INTO mystore VALUES (2, "Long Sleeve Shirt", 5, 15, 20);
+INSERT INTO mystore VALUES (3, "Tan Short", 3, 12, 15);
+INSERT INTO mystore VALUES (4, "Tan Pants", 10, 20, 20);
+INSERT INTO mystore VALUES (5, "Jeans", 12, 25, 30);
+INSERT INTO mystore VALUES (6, "Skirt", 3, 14, 15);
+INSERT INTO mystore VALUES (7, "Skort", 5, 15, 20);
+INSERT INTO mystore VALUES (8, "Jean Shorts", 8, 18, 15);
+INSERT INTO mystore VALUES (9, "Mini Dress", 6, 35, 25);
+INSERT INTO mystore VALUES (10, "Midi Dress", 8, 45, 25);
+INSERT INTO mystore VALUES (11, "Maxi Dress", 10, 55, 35);
+INSERT INTO mystore VALUES (12, "Socks", 2, 10, 10);
+INSERT INTO mystore VALUES (13, "Hat", 2, 10, 15);
+INSERT INTO mystore VALUES (14, "Tennis Shoes", 25, 75, 25);
+INSERT INTO mystore VALUES (15, "Scarf", 2, 10, 15);
+
+--display the database ordered by selling price
+SELECT * FROM mystore ORDER BY sellingprice;
+
