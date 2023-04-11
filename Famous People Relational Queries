@@ -1,0 +1,59 @@
+CREATE TABLE famouspeople_info (
+    id INTEGER PRIMARY KEY,
+    first_name TEXT, 
+    last_name TEXT, 
+    career_type TEXT);
+    
+INSERT INTO famouspeople_info VALUES 
+(1, "Brittney", "Spears", "Singer");
+INSERT INTO famouspeople_info VALUES 
+(2, "Jennifer", "Lawrence", "Actor");
+INSERT INTO famouspeople_info VALUES 
+(3, "Vera", "Wang", "Designer");
+INSERT INTO famouspeople_info VALUES 
+(4, "Tom", "Hanks", "Actor");
+INSERT INTO famouspeople_info VALUES 
+(5, "Alex", "Morgan", "Athlete");
+
+
+CREATE TABLE famouspeople_networth (
+    net_id INTEGER PRIMARY KEY,
+    net_worth INTEGER);
+    
+INSERT INTO famouspeople_networth VALUES 
+(1, 60000000);
+INSERT INTO famouspeople_networth VALUES 
+(2, 160000000);
+INSERT INTO famouspeople_networth VALUES 
+(3, 650000000);
+INSERT INTO famouspeople_networth VALUES 
+(4, 400000000);
+INSERT INTO famouspeople_networth VALUES 
+(5, 3000000);   
+
+#first I want to see the name next to each net worth, so I have to use a left inner join to combine the 2 table by the related id numbers
+
+SELECT famouspeople_info.first_name, famouspeople_info.last_name, famouspeople_networth.net_worth
+    FROM famouspeople_info
+    JOIN famouspeople_networth
+    ON famouspeople_info.id = famouspeople_networth.net_id;
+       
+    
+#then i want to change the table to see who made the most money
+
+SELECT famouspeople_info.first_name, famouspeople_info.last_name, famouspeople_networth.net_worth
+    FROM famouspeople_info
+    JOIN famouspeople_networth
+    ON famouspeople_info.id = famouspeople_networth.net_id
+    ORDER BY famouspeople_networth.net_worth DESC;
+
+
+#the last thing I want to do is see the career of each individual and to see which careers made the most money
+
+SELECT famouspeople_info.first_name, famouspeople_info.last_name, famouspeople_info.career_type, famouspeople_networth.net_worth
+    FROM famouspeople_info
+    JOIN famouspeople_networth
+    ON famouspeople_info.id = famouspeople_networth.net_id
+    ORDER BY famouspeople_networth.net_worth DESC;
+    
+  
