@@ -1,0 +1,274 @@
+In this file, I am showing my work extracting information from a car data set, in order to create a linear model to study the effect of different varibles
+on the price of used cars.
+
+
+## Exercise 1
+
+## Run the set-up code block at the start of the car_prices.Rmd answer file to load the car_prices dataset.
+
+## The car_prices dataset contains both continuous and categorical variables.
+
+
+i. The second continuous variable is mileage.
+ii.
+```{r}
+car_prices %>%
+  pivot_longer(cols = Liter | Mileage, names_to="measurment", values_to="value") %>%
+  ggplot() +
+  geom_point(mapping = aes(x = value, y = Price)) +
+  facet_wrap(~measurment, scales = "free_x") +
+  labs(title="Price Scatter Plots")
+```
+
+
+
+## Exercise 2
+## Using the lm function, create a multivariate model with:
+
+## Price as the response variable (y)
+## Liter and the continuous variable that you identified in Exercise 1 as the two explanatory variables (x)
+
+```{r}
+continuous_model <-
+  lm(Price ~ Liter + Mileage, data=car_prices)
+
+```
+
+
+```{r}
+continuous_model %>%
+  tidy()
+```
+
+```{r}
+continuous_model %>%
+  glance() %>%
+  select(r.squared)
+```
+
+The R-Squared value tells us that about 32.9% of variablity in Price is shown within the model. While this isn't a terribly great R-Squared value, it isn't bad either. 
+
+
+## Exercise 3
+
+##Let's try to visualize what our model looks like by creating a 3D scatter plot
+
+```{r}
+# predict model plane over values
+lit <- unique(car_prices$Liter)
+mil <- unique(car_prices$Mileage)
+grid <- with(car_prices, expand.grid(lit, mil))
+d <- setNames(data.frame(grid), c("Liter", "Mileage"))
+vals <- predict(continuous_model, newdata = d)
+
+# form surface matrix and give to plotly
+m <- matrix(vals, nrow = length(unique(d$Liter)), ncol = length(unique(d$Mileage)))
+p <- plot_ly() %>%
+  add_markers(
+    x = ~car_prices$Mileage, 
+    y = ~car_prices$Liter, 
+    z = ~car_prices$Price, 
+    marker = list(size = 1)
+    ) %>%
+  add_trace(
+    x = ~mil, y = ~lit, z = ~m, type="surface", 
+    colorscale=list(c(0,1), c("yellow","yellow")),
+    showscale = FALSE
+    ) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = "mileage"),
+      yaxis = list(title = "liters"),
+      zaxis = list(title = "price")
+    )
+  )
+if (!is_pdf) {p}
+```
+
+While this 3D plot doies show us that the model does have a seemingly nice linear fit between the data, it is very hard to see is any assumptions are met. The 2D models are much better at seeing linearity, variablity, and different patterns.
+
+
+## Exercise 4
+##Using the model from Exercise 2, continuous_model, calculate the predicted y values and residuals for every data point in the car_prices dataset. 
+##To do this, you will need to use the add_predictions and add_residuals functions that you learned about in the first modeling assignment.
+
+
+```{r}
+continuous_df <-
+  car_prices %>% 
+  add_predictions(continuous_model) %>%
+  add_residuals(continuous_model)
+
+continuous_df
+```
+
+
+## Exercise 5
+##Create an observed vs. predicted plot using continuous_df. Recall that this plots the actual y values (the "observed" y values, i.e. the real Price values) on the y-axis, 
+##versus the model's predicted y values (i.e. the pred column) on a scatter plot (using the geom_point() function).
+
+```{r}
+continuous_df %>%
+  ggplot() +
+  geom_point(mapping = aes(x=pred, y=Price)) +
+  geom_abline(slope=continuous_model$coefficients[2], intercept=
+                continuous_model$coefficients[1]) +
+  labs(
+    title = "Observed vs. Predicted Plot",
+    x = "Predicted Values",
+    y = "Observed Values"
+  )
+
+
+```
+This graph does seem to have positive linear relationship, so the assumption of linearity is met. 
+
+## Exercise 6
+##Create a residual vs. predicted plot. 
+##Recall that this plots the residuals (the resid column) on the y-axis and the predicted y values (i.e. the pred column) on the x-axis.
+
+```{r}
+continuous_df %>%
+  ggplot() +
+  geom_point(mapping = aes(x=pred, y=resid)) +
+  geom_hline(mapping = aes(yintercept = 0)) +
+  labs(
+    title= "Residual vs. Predicted Plot",
+    x = "Predicted Values",
+    y = "Residuals"
+    
+       )
+```
+This plot does not show any patterns around the horizontal line, which means its passes the constant variablility assumption. 
+
+## Exercise 7
+##Create a Q-Q plot using the geom_qq and geom_qq_line geom functions 
+
+```{r}
+continuous_df %>%
+  ggplot() +
+  geom_qq(aes(sample = resid)) +
+  geom_qq_line(aes(sample = resid)) +
+  labs( 
+    title = "Q-Q Plot")
+
+```
+This Q-Q Plot does not pass the normally distributed assumption, because the points are very curved around the line.
+
+## Exercise 8
+##Using the boxplot of the Make and Price variables that you created in your Rmd file, answer the following questions:
+
+##i. Which make of car has the lowest median price?
+
+##ii. Which make of car has the greatest interquartile range of prices?
+
+##iii. Which makes of cars have outliers?
+
+
+```{r}
+car_prices %>%
+  ggplot() +
+  geom_boxplot(aes(x = reorder(Make,Price, FUN=median), y = Price)) +
+  labs(x = "Make of car", title = "Effect of make of car on price")
+```
+
+i. The Saturn has the lowest median price.
+ii. The Cadillac has the greatest interquartile range of prices.
+iii. The Chevrolet, Pontiac, and Cadillac all have outliers.
+
+## Exercise 9
+##Create box plots of the remaining categorical variables in the car_prices dataset
+
+```{r, fig.asp = 1, fig.width = 8, out.width = "100%"}
+car_prices %>%
+  pivot_longer(
+    cols = Make | Model | Trim | Type | Cylinder | Doors | Cruise | Sound | Leather,
+    names_to="names", 
+    values_to="value", 
+    values_transform = list(value = 'factor')
+    ) %>%
+  ggplot() +
+  geom_boxplot(aes(x = reorder(value, Price, FUN=median), y = Price)) +
+  facet_wrap(~names, scales = "free_x") +
+  labs(title = "Box Plot of Categorical Variables")
+```
+
+
+## Exercise 10
+##Create Models
+i.
+```{r}
+cars_factor_df <- car_prices %>%
+  mutate(Cylinder = as.factor(Cylinder))
+
+mixed_model <-
+  lm(Price ~ Mileage + Liter + Cylinder + Make + Type, data=cars_factor_df)
+```
+ii.
+```{r}
+mixed_model %>%
+  tidy()
+```
+iii. 
+```{r}
+mixed_model %>%
+  glance() %>%
+  select(r.squared)
+```
+
+
+## Exercise 11
+#Create Models
+i.
+```{r}
+mixed_df <-
+  cars_factor_df %>% 
+  add_predictions(mixed_model) %>%
+  add_residuals(mixed_model)
+
+mixed_df  
+```
+ii. 
+```{r}
+mixed_df %>%
+  ggplot() +
+  geom_point(mapping = aes(x=pred, y=Price)) +
+  geom_abline(slope=mixed_model$coefficients[2], intercept=
+                mixed_model$coefficients[1]) +
+  labs(
+    title = "Observed vs. Predicted Plot",
+    x = "Predicted Values",
+    y = "Observed Values"
+  )
+```
+
+iii. 
+```{r}
+mixed_df %>%
+  ggplot() +
+  geom_point(mapping = aes(x=pred, y=resid)) +
+  geom_hline(mapping = aes(yintercept = 0)) +
+  labs(
+    title= "Residual vs. Predicted Plot",
+    x = "Predicted Values",
+    y = "Residuals"
+    
+       )
+
+```
+
+iv. 
+```{r}
+mixed_df %>%
+  ggplot() +
+  geom_qq(aes(sample = resid)) +
+  geom_qq_line(aes(sample = resid)) +
+  labs( 
+    title = "Q-Q Plot")
+
+```
+
+## Exercise 12
+i. While the mixed model shows that both the linearity and normal distribution assumptions are more strongly met, the residual vs. predicted plot shows a type of pattern which means it fails the constant variablility assumption. The r-squared of the mixed model is significantly higher than that of the first model as well, which means more variability in Price is explained, but with the higher number of variables this isn't surprising.
+
+ii. I think if I were picking a car I would use the mixed model, just because it has more variables and a high r-square. 2 out of 3 major assumptions are met, and the model seems to have more data, while still keeping a strong linear relationship.
